@@ -9,12 +9,28 @@ mass = 0.05  # Mass of the weight in kg (50 g)
 piston_area = 0.01  # Area of the piston in m² (arbitrary but fixed for simplicity)
 
 # Specific heat capacities at constant pressure (Cp) for different gases (in J/kg·K)
-gas_data = {
+gas_cv = {
+    "air": 717,      # Specific Cv for air in J/kg·K
+    "helium": 5193,  # Specific Cv for helium in J/kg·K
+    "argon": 520,    # Specific Cv for argon in J/kg·K
+    "oxygen": 918,   # Specific Cv for oxygen in J/kg·K
+    "nitrogen": 1040 # Specific Cv for nitrogen in J/kg·K
+}
+
+gas_cp = {
     "air": 1005,      # Specific Cp for air in J/kg·K
     "helium": 5193,   # Specific Cp for helium in J/kg·K
     "argon": 520,     # Specific Cp for argon in J/kg·K
     "oxygen": 918,    # Specific Cp for oxygen in J/kg·K
     "nitrogen": 1040  # Specific Cp for nitrogen in J/kg·K
+}
+
+gas_density = {
+    "air": 1.225,      # Density of air in kg/m³
+    "helium": 0.1785,  # Density of helium in kg/m³
+    "argon": 1.784,    # Density of argon in kg/m³
+    "oxygen": 1.429,   # Density of oxygen in kg/m³
+    "nitrogen": 1.250  # Density of nitrogen in kg/m³
 }
 
 def calculate_work_and_distance(P, delta_V):
@@ -31,16 +47,19 @@ def first_law_thermodynamics(system_gas, T_environment, V_initial, Q_in, P):
     if system_gas not in gas_data:
         raise ValueError(f"Gas '{system_gas}' is not available. Choose from: {list(gas_data.keys())}")
     
-    Cp = gas_data[system_gas]  # Get specific Cp for the selected gas (J/kg·K)
+    Cv = gas_cv[system_gas]  # Get specific Cv for the selected gas (J/kg·K)
+    Cp = gas_cp[system_gas]  # Get specific Cp for the selected gas (J/kg·K)
+    density = gas_density[system_gas]  # Get density of the selected gas (kg/m³)
+    k = Cp / Cv  # Ratio of specific heat capacities (Cp/Cv)
     
     # Assume we have a constant amount of gas (say 1 kg for simplicity)
-    gas_mass = 1  # 1 kg of gas
+    gas_mass = density * V_initial # Mass of the gas in the cylinder (kg)
     
-    # Calculate the change in internal energy (ΔU = Cp * ΔT * gas_mass)
+    # Calculate the change in internal energy (ΔU = Cv * ΔT * gas_mass)
     delta_U = Q_in  # Since no external work is done, ΔU = Q_in
     
-    # Calculate the change in temperature using ΔU = Cp * ΔT * gas_mass (constant pressure process)
-    delta_T = delta_U / (Cp * gas_mass)
+    # Calculate the change in temperature using ΔU = Cv * ΔT * gas_mass (constant volume process)
+    delta_T = delta_U / (Cv * gas_mass)
     
     # Final temperature
     T_final = T_environment + delta_T
