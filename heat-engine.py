@@ -8,29 +8,32 @@ g = 9.81  # Acceleration due to gravity in m/s²
 mass = 0.05  # Mass of the weight in kg (50 g)
 piston_area = 0.01  # Area of the piston in m² (arbitrary but fixed for simplicity)
 
-# Specific heat capacities at constant pressure (Cp) for different gases (in J/kg·K)
-gas_cv = {
-    "air": 717,      # Specific Cv for air in J/kg·K
-    "helium": 5193,  # Specific Cv for helium in J/kg·K
-    "argon": 520,    # Specific Cv for argon in J/kg·K
-    "oxygen": 918,   # Specific Cv for oxygen in J/kg·K
-    "nitrogen": 1040 # Specific Cv for nitrogen in J/kg·K
-}
-
-gas_cp = {
-    "air": 1005,      # Specific Cp for air in J/kg·K
-    "helium": 5193,   # Specific Cp for helium in J/kg·K
-    "argon": 520,     # Specific Cp for argon in J/kg·K
-    "oxygen": 918,    # Specific Cp for oxygen in J/kg·K
-    "nitrogen": 1040  # Specific Cp for nitrogen in J/kg·K
-}
-
-gas_density = {
-    "air": 1.225,      # Density of air in kg/m³
-    "helium": 0.1785,  # Density of helium in kg/m³
-    "argon": 1.784,    # Density of argon in kg/m³
-    "oxygen": 1.429,   # Density of oxygen in kg/m³
-    "nitrogen": 1.250  # Density of nitrogen in kg/m³
+gas_properties = {
+    "air": {
+        "cv": 717,      # Specific Cv for air in J/kg·K
+        "cp": 1005,     # Specific Cp for air in J/kg·K
+        "density": 1.225 # Density of air in kg/m³
+    },
+    "helium": {
+        "cv": 5193,     # Specific Cv for helium in J/kg·K
+        "cp": 5193,     # Specific Cp for helium in J/kg·K
+        "density": 0.1785 # Density of helium in kg/m³
+    },
+    "argon": {
+        "cv": 520,      # Specific Cv for argon in J/kg·K
+        "cp": 520,      # Specific Cp for argon in J/kg·K
+        "density": 1.784 # Density of argon in kg/m³
+    },
+    "oxygen": {
+        "cv": 918,      # Specific Cv for oxygen in J/kg·K
+        "cp": 918,      # Specific Cp for oxygen in J/kg·K
+        "density": 1.429 # Density of oxygen in kg/m³
+    },
+    "nitrogen": {
+        "cv": 1040,     # Specific Cv for nitrogen in J/kg·K
+        "cp": 1040,     # Specific Cp for nitrogen in J/kg·K
+        "density": 1.250 # Density of nitrogen in kg/m³
+    }
 }
 
 def calculate_work_and_distance(P, delta_V):
@@ -44,12 +47,12 @@ def calculate_work_and_distance(P, delta_V):
     return work_done, distance_moved
 
 def first_law_thermodynamics(system_gas, T_environment, V_initial, Q_in, P):
-    if system_gas not in gas_data:
-        raise ValueError(f"Gas '{system_gas}' is not available. Choose from: {list(gas_data.keys())}")
+    if system_gas not in gas_properties:
+        raise ValueError(f"Gas '{system_gas}' is not available. Choose from: {list(gas_properties.keys())}")
     
-    Cv = gas_cv[system_gas]  # Get specific Cv for the selected gas (J/kg·K)
-    Cp = gas_cp[system_gas]  # Get specific Cp for the selected gas (J/kg·K)
-    density = gas_density[system_gas]  # Get density of the selected gas (kg/m³)
+    Cv = gas_properties[system_gas["cv"]]  # Get specific Cv for the selected gas (J/kg·K)
+    Cp = gas_properties[system_gas["cp"]]  # Get specific Cp for the selected gas (J/kg·K)
+    density = gas_properties[system_gas["density"]]  # Get density of the selected gas (kg/m³)
     k = Cp / Cv  # Ratio of specific heat capacities (Cp/Cv)
     
     # Assume we have a constant amount of gas (say 1 kg for simplicity)
