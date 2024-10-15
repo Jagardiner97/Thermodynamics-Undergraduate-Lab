@@ -6,7 +6,9 @@ import numpy as np
 # Constants
 g = 9.81  # Acceleration due to gravity in m/s²
 mass = 0.05  # Mass of the weight in kg (50 g)
-piston_area = 0.01  # Area of the piston in m² (arbitrary but fixed for simplicity)
+piston_area = 0.001  # Area of the piston in m² (arbitrary but fixed for simplicity)
+start_height = 0.01  # Initial height of the weight in meters (5 mm)
+pressure = 101325 + mass/piston_area  # Atmospheric pressure in Pascals (1 atm)
 
 gas_properties = {
     "air": {
@@ -15,85 +17,40 @@ gas_properties = {
         "density": 1.225 # Density of air in kg/m³
     },
     "helium": {
-        "cv": 5193,     # Specific Cv for helium in J/kg·K
+        "cv": 3116,     # Specific Cv for helium in J/kg·K
         "cp": 5193,     # Specific Cp for helium in J/kg·K
         "density": 0.1785 # Density of helium in kg/m³
     },
     "argon": {
-        "cv": 520,      # Specific Cv for argon in J/kg·K
+        "cv": 312,      # Specific Cv for argon in J/kg·K
         "cp": 520,      # Specific Cp for argon in J/kg·K
         "density": 1.784 # Density of argon in kg/m³
     },
     "oxygen": {
         "cv": 918,      # Specific Cv for oxygen in J/kg·K
-        "cp": 918,      # Specific Cp for oxygen in J/kg·K
+        "cp": 658,      # Specific Cp for oxygen in J/kg·K
         "density": 1.429 # Density of oxygen in kg/m³
     },
     "nitrogen": {
-        "cv": 1040,     # Specific Cv for nitrogen in J/kg·K
-        "cp": 1040,     # Specific Cp for nitrogen in J/kg·K
+        "cv": 743,     # Specific Cv for nitrogen in J/kg·K
+        "cp": 1039,     # Specific Cp for nitrogen in J/kg·K
         "density": 1.250 # Density of nitrogen in kg/m³
     }
 }
 
-def calculate_work_and_distance(P, delta_V):
-    """Calculate work done by gas and distance the piston moves."""
-    # Work done by the gas (W = P * ΔV)
-    work_done = P * delta_V
-    
-    # Calculate the distance moved by the piston (ΔV = area * distance)
-    distance_moved = delta_V / piston_area  # Distance in meters
-    
-    return work_done, distance_moved
-
-def first_law_thermodynamics(system_gas, T_environment, V_initial, Q_in, P):
-    if system_gas not in gas_properties:
-        raise ValueError(f"Gas '{system_gas}' is not available. Choose from: {list(gas_properties.keys())}")
-    
-    Cv = gas_properties[system_gas["cv"]]  # Get specific Cv for the selected gas (J/kg·K)
-    Cp = gas_properties[system_gas["cp"]]  # Get specific Cp for the selected gas (J/kg·K)
-    density = gas_properties[system_gas["density"]]  # Get density of the selected gas (kg/m³)
-    k = Cp / Cv  # Ratio of specific heat capacities (Cp/Cv)
-    
-    # Assume we have a constant amount of gas (say 1 kg for simplicity)
-    gas_mass = density * V_initial # Mass of the gas in the cylinder (kg)
-    
-    # Calculate the change in internal energy (ΔU = Cv * ΔT * gas_mass)
-    delta_U = Q_in  # Since no external work is done, ΔU = Q_in
-    
-    # Calculate the change in temperature using ΔU = Cv * ΔT * gas_mass (constant volume process)
-    delta_T = delta_U / (Cv * gas_mass)
-    
-    # Final temperature
-    T_final = T_environment + delta_T
-    
-    # Calculate work done by the gas (W = Q_in at constant pressure)
-    delta_V = Q_in / P  # Work done by gas W = P * ΔV, so ΔV = W / P
-    
-    # Calculate distance moved by the piston
-    work_done, distance_moved = calculate_work_and_distance(P, delta_V)
-    
-    # Final volume
-    V_final = V_initial + delta_V
-    
-    # Convert distance to mm for better readability
-    distance_moved_mm = distance_moved * 1000
-    
-    return T_final, V_final, distance_moved_mm, delta_U
-
 # Animation Function
-def animate_piston(T_initial, T_final, distance_moved):
+def animate_piston(T_initial, T_final, distance_moved, start_height=5):
     # Setup the figure
     fig, ax = plt.subplots()
     ax.set_xlim(0, 1)
-    ax.set_ylim(0, 20)  # Cylinder height from 0 to 20 mm
+    ax.set_ylim(0, 50)  # Cylinder height from 0 to 20 mm
     
     # Draw the cylinder (rectangle)
-    cylinder = patches.Rectangle((0.2, 0), 0.6, 10, linewidth=2, edgecolor='black', facecolor='white')
+    cylinder = patches.Rectangle((0.2, 0), 0.6, start_height, linewidth=2, edgecolor='black', facecolor='white')
     ax.add_patch(cylinder)
     
     # Create the piston as a horizontal rectangle
-    piston_height = 10  # Initial piston height in mm
+    piston_height = start_height  # Initial piston height in mm
     piston = patches.Rectangle((0.2, piston_height), 0.6, 1, linewidth=2, edgecolor='black', facecolor='gray')
     ax.add_patch(piston)
     
@@ -123,15 +80,42 @@ def animate_piston(T_initial, T_final, distance_moved):
     # Show the animation
     plt.show()
 
+# Heat engine calculations
+def heat_engine(system_gas, T_cold, T_hot, V_initial, P, A_piston):
+    # Determine gas properties
+    Cp = gas_properties[system_gas]["cp"]
+    rho = gas_properties[system_gas]["density"]
+    m_gas = rho * V_initial
+
+    # Calculate the volume change
+    V_2 = V_initial * (T_hot / T_cold)
+    W_out = P * (V_2 - V_initial)
+    delta_U = m_gas * Cp * (T_hot - T_cold)
+    Q_in = W_out + delta_U
+
+    # Calculate the efficiency of the heat engine and change in height
+    eta = W_out / Q_in
+    delta_h = ((V_2 - V_initial) / A_piston) * 1000  # Convert to mm
+
+    return W_out, Q_in, delta_U, eta, delta_h
+
+# Print the results
+def print_report(W_out, Q_in, delta_U, eta, delta_h):
+    print("\nHeat Engine Simulation Results:")
+    print(f"Work done by the engine: {W_out:.2f} J")
+    print(f"Heat added to the engine: {Q_in:.2f} J")
+    print(f"Change in internal energy of the gas: {delta_U:.2f} J")
+    print(f"Efficiency of the engine: {eta:.2f}")
+    print(f"Change in height of the weight: {delta_h:.2f} mm\n")
+
 # Example inputs (students can modify these values)
 system_gas = input("Enter the type of gas (air, helium, argon, oxygen, nitrogen): ").lower()
-T_environment = float(input("Enter the environmental temperature (K): "))
-V_initial = float(input("Enter the initial volume of the gas (m³): "))
-Q_in = float(input("Enter the heat added to the system (J): "))
-P = float(input("Enter the pressure of the gas (Pa): "))
+T_cold = float(input("Enter the cold bath temperature (C): ")) + 273.15
+T_hot = float(input("Enter the hot bath temperature (C): ")) + 273.15
 
 # Perform the simulation
-T_final, V_final, distance_moved_mm, delta_U = first_law_thermodynamics(system_gas, T_environment, V_initial, Q_in, P)
+work_done, heat_added, internal_energy_change, efficiency, distance_moved_mm = heat_engine(system_gas, T_cold, T_hot, start_height * piston_area + 0.0001, pressure, piston_area)
+print_report(work_done, heat_added, internal_energy_change, efficiency, distance_moved_mm)
 
 # Run the animation
-animate_piston(T_environment, T_final, distance_moved_mm)
+animate_piston(T_cold, T_hot, distance_moved_mm)
