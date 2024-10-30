@@ -7,7 +7,7 @@ import numpy as np
 g = 9.81  # Acceleration due to gravity in m/s²
 mass = 0.05  # Mass of the weight in kg (50 g)
 piston_area = 0.001  # Area of the piston in m² (arbitrary but fixed for simplicity)
-start_height = 0.01  # Initial height of the weight in meters (5 mm)
+start_height = 0.005  # Initial height of the weight in meters (5 mm)
 pressure = 101325 + mass/piston_area  # Atmospheric pressure in Pascals (1 atm)
 
 gas_properties = {
@@ -27,8 +27,8 @@ gas_properties = {
         "density": 1.784 # Density of argon in kg/m³
     },
     "oxygen": {
-        "cv": 918,      # Specific Cv for oxygen in J/kg·K
-        "cp": 658,      # Specific Cp for oxygen in J/kg·K
+        "cv": 658,      # Specific Cv for oxygen in J/kg·K
+        "cp": 918,      # Specific Cp for oxygen in J/kg·K
         "density": 1.429 # Density of oxygen in kg/m³
     },
     "nitrogen": {
@@ -126,7 +126,7 @@ def print_report(W_out, Q_in, delta_U, eta, delta_h, height_limit, hide_efficien
     if not hide_efficiency:
         print(f"Efficiency of the engine: {eta:.2f}")
     if height_limit:
-        print("The height of the weight was limited to 45 mm.")
+        print("The change in height for the piston was limited to 45 mm.")
     else:
         print(f"Change in height of the weight: {delta_h:.2f} mm\n")
 
@@ -141,7 +141,7 @@ if T_cold < 273.15:
     print("Enter a temperature greater than 0 C.")
     exit()
 T_hot = float(input("Enter the hot bath temperature (C): ")) + 273.15
-if T_hot > 373.15:
+if T_hot > 423.15:
     print("Enter a temperature below 100 C.")
     exit()
 
