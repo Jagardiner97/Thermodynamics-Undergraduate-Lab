@@ -142,7 +142,7 @@ if T_cold < 273.15:
     exit()
 T_hot = float(input("Enter the hot bath temperature (C): ")) + 273.15
 if T_hot > 423.15:
-    print("Enter a temperature below 100 C.")
+    print("Enter a temperature below 150 C.")
     exit()
 
 # Perform the simulation
